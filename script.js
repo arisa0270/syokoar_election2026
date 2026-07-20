@@ -1,0 +1,1 @@
+console.log("ARサイト起動！");
