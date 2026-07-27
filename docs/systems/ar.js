@@ -1,93 +1,258 @@
 import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
 
-export async function startAR() {
+export class ARSystem {
 
-    const mindarThree = new MindARThree({
+    constructor() {
 
-        container: document.querySelector("#ar-container"),
+        this.mindar = null;
 
-        imageTargetSrc: "./assets/targets/target.mind",
+        this.renderer = null;
 
-    });
+        this.scene = null;
 
-    const {
+        this.camera = null;
 
-        renderer,
-        scene,
-        camera
+        this.anchor = null;
 
-    } = mindarThree;
+        this.clock = new THREE.Clock();
 
-    //----------------------------------
-    // ライト
-    //----------------------------------
+        this.isTracking = false;
 
-    const light = new THREE.HemisphereLight(
-        0xffffff,
-        0xbbbbff,
-        1
-    );
+        this.updateCallbacks = [];
 
-    scene.add(light);
+    }
 
-    //----------------------------------
-    // Anchor
-    //----------------------------------
+    //----------------------------------------------------
+    // 初期化
+    //----------------------------------------------------
 
-    const anchor = mindarThree.addAnchor(0);
+    async init() {
 
-    //----------------------------------
-    // デバッグ用Cube
-    //----------------------------------
+        this.mindar = new MindARThree({
 
-    const geometry = new THREE.BoxGeometry(
-        0.4,
-        0.4,
-        0.4
-    );
+            container: document.querySelector("#ar-container"),
 
-    const material = new THREE.MeshStandardMaterial({
+            imageTargetSrc: "./assets/targets/target.mind",
 
-        color: 0x00ff00
+        });
 
-    });
+        this.renderer = this.mindar.renderer;
 
-    const cube = new THREE.Mesh(
-        geometry,
-        material
-    );
+        this.scene = this.mindar.scene;
 
-    anchor.group.add(cube);
+        this.camera = this.mindar.camera;
 
-    //----------------------------------
-    // 認識イベント
-    //----------------------------------
+        //----------------------------------
+        // ライト
+        //----------------------------------
 
-    anchor.onTargetFound = () => {
+        const hemiLight = new THREE.HemisphereLight(
 
-        console.log("認識成功！");
+            0xffffff,
 
-    };
+            0x8888ff,
 
-    anchor.onTargetLost = () => {
+            1.3
 
-        console.log("認識解除");
+        );
 
-    };
+        this.scene.add(hemiLight);
 
-    //----------------------------------
+        const dirLight = new THREE.DirectionalLight(
 
-    await mindarThree.start();
+            0xffffff,
 
-    document.querySelector("#loading").style.display = "none";
+            0.9
 
-    renderer.setAnimationLoop(() => {
+        );
 
-        cube.rotation.y += 0.02;
+        dirLight.position.set(
 
-        renderer.render(scene, camera);
+            0,
 
-    });
+            5,
+
+            5
+
+        );
+
+        this.scene.add(dirLight);
+
+        //----------------------------------
+        // Anchor
+        //----------------------------------
+
+        this.anchor = this.mindar.addAnchor(0);
+
+    }
+
+    //----------------------------------------------------
+    // 起動
+    //----------------------------------------------------
+
+    async start() {
+
+        await this.mindar.start();
+
+        // ローディングを消す
+        const loading = document.querySelector("#loading");
+
+        if (loading) {
+
+            loading.style.display = "none";
+
+        }
+
+        //----------------------------------
+        // 認識イベント
+        //----------------------------------
+
+        this.anchor.onTargetFound = () => {
+
+            console.log("認識成功");
+
+            this.isTracking = true;
+
+        };
+
+        this.anchor.onTargetLost = () => {
+
+            console.log("認識解除");
+
+            this.isTracking = false;
+
+        };
+
+        //----------------------------------
+        // レンダーループ
+        //----------------------------------
+
+        this.renderer.setAnimationLoop(() => {
+
+            const delta = this.clock.getDelta();
+
+            // 登録された更新処理を全部実行
+            for (const callback of this.updateCallbacks) {
+
+                callback(delta);
+
+            }
+
+            this.renderer.render(
+
+                this.scene,
+
+                this.camera
+
+            );
+
+        });
+
+    }
+
+    //----------------------------------------------------
+    // 更新処理を登録
+    //----------------------------------------------------
+
+    addUpdate(callback) {
+
+        this.updateCallbacks.push(callback);
+
+    }
+
+    //----------------------------------------------------
+    // Anchor取得
+    //----------------------------------------------------
+
+    getAnchor() {
+
+        return this.anchor;
+
+    }
+
+    //----------------------------------------------------
+    // Scene取得
+    //----------------------------------------------------
+
+    getScene() {
+
+        return this.scene;
+
+    }
+
+    //----------------------------------------------------
+    // Camera取得
+    //----------------------------------------------------
+
+    getCamera() {
+
+        return this.camera;
+
+    }
+
+    //----------------------------------------------------
+    // Renderer取得
+    //----------------------------------------------------
+
+    getRenderer() {
+
+        return this.renderer;
+
+    }
+
+    //----------------------------------------------------
+    // Tracking状態
+    //----------------------------------------------------
+
+    isTargetFound() {
+
+        return this.isTracking;
+
+    }
+
+    //----------------------------------------------------
+    // Tracking状態取得
+    //----------------------------------------------------
+
+    getTrackingState() {
+
+        return this.isTracking;
+
+    }
+
+    //----------------------------------------------------
+    // ウィンドウリサイズ
+    //----------------------------------------------------
+
+    resize() {
+
+        if (this.renderer) {
+
+            this.renderer.setSize(
+
+                window.innerWidth,
+
+                window.innerHeight
+
+            );
+
+        }
+
+    }
+
+    //----------------------------------------------------
+    // 終了処理
+    //----------------------------------------------------
+
+    async stop() {
+
+        if (!this.mindar) return;
+
+        this.renderer.setAnimationLoop(null);
+
+        await this.mindar.stop();
+
+    }
 
 }
