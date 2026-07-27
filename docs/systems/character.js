@@ -18,61 +18,49 @@ export class CharacterSystem {
 
     createCharacter(options) {
 
-        const texture = this.loader.load(options.texture);
+    const texture = this.loader.load(
 
-        texture.colorSpace = THREE.SRGBColorSpace;
+        options.texture,
 
-        const material = new THREE.SpriteMaterial({
+        () => {
 
-            map: texture,
+            console.log("画像ロード成功");
 
-            transparent: true,
+        },
 
-            depthWrite: false
+        undefined,
 
-        });
+        (err) => {
 
-        const sprite = new THREE.Sprite(material);
+            console.error("画像ロード失敗", err);
 
-        sprite.scale.set(
+        }
 
-            options.width,
+    );
 
-            options.height,
+    texture.colorSpace = THREE.SRGBColorSpace;
 
-            1
+    const material = new THREE.SpriteMaterial({
 
-        );
+        map: texture,
 
-        sprite.position.set(
+        transparent: true,
 
-            options.x,
+    });
 
-            options.y,
+    const sprite = new THREE.Sprite(material);
 
-            options.z
+    sprite.scale.set(1,1,1);
 
-        );
+    sprite.position.set(0,0,0);
 
-        sprite.userData = {
+    this.anchor.group.add(sprite);
 
-            baseY: options.y,
+    this.characters.push(sprite);
 
-            speed: options.speed ?? 1,
+    return sprite;
 
-            amplitude: options.amplitude ?? 0.02,
-
-            elapsed: Math.random() * 100
-
-        };
-
-        this.anchor.group.add(sprite);
-
-        this.characters.push(sprite);
-
-        return sprite;
-
-    }
+}
 
     //------------------------------------------------
     // 全員更新
