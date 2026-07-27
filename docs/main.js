@@ -12,7 +12,6 @@ const character = new CharacterSystem(
 
 );
 
-await ar.start();
 
 character.createCharacter({
 
@@ -29,6 +28,8 @@ character.createCharacter({
     z: 0
 
 });
+
+await ar.start();
 
 ar.addUpdate((delta)=>{
 
