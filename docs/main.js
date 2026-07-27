@@ -1,3 +1,7 @@
-import { startAR } from "./systems/ar.js";
+import { ARSystem } from "./systems/ar.js";
 
-startAR();
+const ar = new ARSystem();
+
+await ar.init();
+
+await ar.start();
