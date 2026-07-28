@@ -1,38 +1,29 @@
 import { ARSystem } from "./systems/ar.js";
-
-const ar = new ARSystem();
-
 import { CharacterSystem } from "./systems/character.js";
 
-await ar.init();
+async function main() {
 
-const character = new CharacterSystem(
+    const ar = new ARSystem();
 
-    ar.getAnchor()
+    await ar.init();
 
-);
+    const character = new CharacterSystem(ar.getAnchor());
 
+    character.createCharacter({
+        texture: "./assets/characters/cu_open.png",
+        width: 1,
+        height: 1.5,
+        x: 0,
+        y: 0,
+        z: 0
+    });
 
-character.createCharacter({
+    ar.addUpdate((delta) => {
+        character.update(delta);
+    });
 
-    texture: "./assets/characters/cu_open.png",
+    await ar.start();
 
-    width: 0.9,
+}
 
-    height: 1.35,
-
-    x: 0,
-
-    y: 0.1,
-
-    z: 0
-
-});
-
-await ar.start();
-
-ar.addUpdate((delta)=>{
-
-    character.update(delta);
-
-});
+main();
