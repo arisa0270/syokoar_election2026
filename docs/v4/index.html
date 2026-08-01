@@ -101,44 +101,233 @@ video {
   </style>
 
   <script>
+  /*
+   * 胞子 → Cu召喚演出
+   */
+  AFRAME.registerComponent("summon-sequence", {
+    init: function () {
+      this.character = document.querySelector("#cu-character");
+      this.guide = document.querySelector("#guide");
+      this.status = document.querySelector("#status");
+
+      this.particles = [];
+      this.animationStarted = false;
+      this.animationStartTime = 0;
+
+      this.createParticles();
+
+      this.el.addEventListener("targetFound", () => {
+        console.log("認識成功");
+
+        this.guide.classList.add("hidden");
+        this.status.textContent = "召喚中…";
+
+        this.startSequence();
+      });
+
+      this.el.addEventListener("targetLost", () => {
+        console.log("認識解除");
+
+        this.guide.classList.remove("hidden");
+        this.status.textContent = "認識画像を探しています";
+
+        this.resetSequence();
+      });
+    },
+
     /*
-     * 認識イベント確認用。
-     * この段階では演出を入れず、
-     * カメラ・target.mind・PNG表示が成立するかだけ確認する。
+     * 胞子をプログラムで生成
      */
-    AFRAME.registerComponent("target-events", {
-      init: function () {
-        const guide = document.getElementById("guide");
-        const status = document.getElementById("status");
+    createParticles: function () {
+      const colors = [
+        "#ffffff",
+        "#e8d8ff",
+        "#d9ffe3",
+        "#ffd9f1"
+      ];
 
-        this.el.addEventListener("targetFound", () => {
-          console.log("認識成功");
-          guide.classList.add("hidden");
-          status.textContent = "認識成功";
+      for (let i = 0; i < 55; i++) {
+        const particle = document.createElement("a-sphere");
+
+        const size = 0.008 + Math.random() * 0.018;
+
+        particle.setAttribute("radius", size);
+
+        particle.setAttribute("material", {
+          color: colors[Math.floor(Math.random() * colors.length)],
+          emissive: colors[Math.floor(Math.random() * colors.length)],
+          emissiveIntensity: 1.3,
+          transparent: true,
+          opacity: 0,
+          shader: "standard"
         });
 
-        this.el.addEventListener("targetLost", () => {
-          console.log("認識解除");
-          guide.classList.remove("hidden");
-          status.textContent = "認識画像を探しています";
-        });
+        particle.object3D.position.set(
+          (Math.random() - 0.5) * 1.5,
+          (Math.random() - 0.5) * 1.1,
+          0.03 + Math.random() * 0.15
+        );
+
+        particle.dataset.startX = particle.object3D.position.x;
+        particle.dataset.startY = particle.object3D.position.y;
+        particle.dataset.startZ = particle.object3D.position.z;
+
+        particle.dataset.speed = 0.7 + Math.random() * 0.8;
+        particle.dataset.phase = Math.random() * Math.PI * 2;
+
+        this.el.appendChild(particle);
+        this.particles.push(particle);
       }
-    });
+    },
 
-    window.addEventListener("DOMContentLoaded", () => {
-      const scene = document.querySelector("a-scene");
-      const status = document.getElementById("status");
+    /*
+     * 召喚演出開始
+     */
+    startSequence: function () {
+      this.animationStarted = true;
+      this.animationStartTime = performance.now();
 
-      scene.addEventListener("arReady", () => {
-        console.log("MindAR起動成功");
-        status.textContent = "認識画像を探しています";
+      this.character.setAttribute("visible", true);
+      this.character.setAttribute("scale", "0.001 0.001 0.001");
+      this.character.setAttribute("material", "opacity", 0);
+
+      this.particles.forEach((particle) => {
+        particle.setAttribute("visible", true);
+        particle.setAttribute("material", "opacity", 0);
+      });
+    },
+
+    /*
+     * 認識を外した際に初期状態へ戻す
+     */
+    resetSequence: function () {
+      this.animationStarted = false;
+
+      this.character.setAttribute("visible", false);
+      this.character.setAttribute("scale", "0.001 0.001 0.001");
+      this.character.setAttribute("material", "opacity", 0);
+
+      this.particles.forEach((particle) => {
+        particle.setAttribute("visible", false);
+
+        particle.object3D.position.set(
+          Number(particle.dataset.startX),
+          Number(particle.dataset.startY),
+          Number(particle.dataset.startZ)
+        );
+      });
+    },
+
+    /*
+     * 毎フレームのアニメーション
+     */
+    tick: function (time) {
+      if (!this.animationStarted) return;
+
+      const elapsed = (time - this.animationStartTime) / 1000;
+
+      /*
+       * 0～1.4秒：胞子出現・中央へ集合
+       */
+      const particleProgress = Math.min(elapsed / 1.4, 1);
+
+      this.particles.forEach((particle, index) => {
+        const phase = Number(particle.dataset.phase);
+        const speed = Number(particle.dataset.speed);
+
+        const startX = Number(particle.dataset.startX);
+        const startY = Number(particle.dataset.startY);
+        const startZ = Number(particle.dataset.startZ);
+
+        const targetX = 0;
+        const targetY = 0.32;
+        const targetZ = 0.04;
+
+        const eased =
+          1 - Math.pow(1 - particleProgress, 3);
+
+        particle.object3D.position.x =
+          startX +
+          (targetX - startX) * eased +
+          Math.sin(elapsed * speed * 4 + phase) * 0.015;
+
+        particle.object3D.position.y =
+          startY +
+          (targetY - startY) * eased +
+          Math.cos(elapsed * speed * 3 + phase) * 0.015;
+
+        particle.object3D.position.z =
+          startZ +
+          (targetZ - startZ) * eased;
+
+        let opacity;
+
+        if (particleProgress < 0.25) {
+          opacity = particleProgress / 0.25;
+        } else {
+          opacity = 1 - Math.max(0, particleProgress - 0.72) / 0.28;
+        }
+
+        particle.setAttribute(
+          "material",
+          "opacity",
+          Math.max(0, Math.min(1, opacity))
+        );
       });
 
-      scene.addEventListener("arError", (event) => {
-        console.error("MindAR起動失敗", event);
-        status.textContent = "ARの起動に失敗しました";
-      });
+      /*
+       * 1.05秒以降：Cu登場
+       */
+      if (elapsed >= 1.05) {
+        const characterProgress =
+          Math.min((elapsed - 1.05) / 0.75, 1);
+
+        const eased =
+          1 - Math.pow(1 - characterProgress, 3);
+
+        const scale = 0.72 + eased * 0.28;
+
+        this.character.setAttribute(
+          "scale",
+          `${scale} ${scale} ${scale}`
+        );
+
+        this.character.setAttribute(
+          "material",
+          "opacity",
+          eased
+        );
+
+        /*
+         * 少し下から上へ現れる
+         */
+        this.character.object3D.position.y =
+          0.26 + eased * 0.12;
+      }
+
+      /*
+       * 演出完了後
+       */
+      if (elapsed >= 1.9) {
+        this.status.textContent = "星輝子、召喚！";
+      }
+    }
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const scene = document.querySelector("a-scene");
+    const status = document.querySelector("#status");
+
+    scene.addEventListener("arReady", () => {
+      console.log("MindAR起動成功");
+      status.textContent = "認識画像を探しています";
     });
+
+    scene.addEventListener("arError", (event) => {
+      console.error("MindAR起動失敗", event);
+      status.textContent = "ARの起動に失敗しました";
+    });
+  });
   </script>
 </head>
 
@@ -187,36 +376,27 @@ video {
 
     <!-- target.mind内の1枚目を認識 -->
     <a-entity
-      mindar-image-target="targetIndex: 0"
-      target-events
-    >
-      <!--
-        認識確認用の青い板。
-        Cuが見えなくても、この板が出れば追跡自体は成功。
-      -->
-      <a-plane
-        color="#0088ff"
-        opacity="0.35"
-        width="1"
-        height="0.7"
-        position="0 0 0"
-        rotation="0 0 0"
-      ></a-plane>
-
-      <!-- Cu立ち絵 -->
-      <a-image
-        src="#cu-open"
-        width="0.9"
-        height="1.35"
-        position="0 0.38 0.02"
-        rotation="0 0 0"
-        material="
-          transparent: true;
-          alphaTest: 0.01;
-          shader: flat;
-        "
-      ></a-image>
-    </a-entity>
+  mindar-image-target="targetIndex: 0"
+  summon-sequence
+>
+  <!-- Cu立ち絵：最初は非表示 -->
+  <a-image
+    id="cu-character"
+    src="#cu-open"
+    width="0.9"
+    height="1.35"
+    position="0 0.26 0.05"
+    scale="0.001 0.001 0.001"
+    visible="false"
+    material="
+      transparent: true;
+      opacity: 0;
+      alphaTest: 0.01;
+      shader: flat;
+      depthWrite: false;
+    "
+  ></a-image>
+</a-entity>
   </a-scene>
 </body>
 </html>
