@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  >
+
+  <title>星輝子 AR v4</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- MindAR Image Tracking / A-Frame版 -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* MindAR標準UIの上に出す案内 */
+    #guide {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      padding: 10px 16px;
+
+      color: #fff;
+      background: rgba(0, 0, 0, 0.72);
+      border-radius: 999px;
+
+      font-family:
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
+      font-size: 14px;
+      text-align: center;
+
+      transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+    }
+
+    #guide.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #status {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 10000;
+
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      padding: 8px 14px;
+
+      color: #fff;
+      background: rgba(0, 0, 0, 0.72);
+      border-radius: 8px;
+
+      font-family:
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+
+  <script>
+    /*
+     * 認識イベント確認用。
+     * この段階では演出を入れず、
+     * カメラ・target.mind・PNG表示が成立するかだけ確認する。
+     */
+    AFRAME.registerComponent("target-events", {
+      init: function () {
+        const guide = document.getElementById("guide");
+        const status = document.getElementById("status");
+
+        this.el.addEventListener("targetFound", () => {
+          console.log("認識成功");
+          guide.classList.add("hidden");
+          status.textContent = "認識成功";
+        });
+
+        this.el.addEventListener("targetLost", () => {
+          console.log("認識解除");
+          guide.classList.remove("hidden");
+          status.textContent = "認識画像を探しています";
+        });
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const scene = document.querySelector("a-scene");
+      const status = document.getElementById("status");
+
+      scene.addEventListener("arReady", () => {
+        console.log("MindAR起動成功");
+        status.textContent = "認識画像を探しています";
+      });
+
+      scene.addEventListener("arError", (event) => {
+        console.error("MindAR起動失敗", event);
+        status.textContent = "ARの起動に失敗しました";
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="guide">
+    カメラを印刷イラストに向けてください
+  </div>
+
+  <div id="status">
+    ARを準備しています
+  </div>
+
+  <a-scene
+    mindar-image="
+      imageTargetSrc: ../assets/targets/target.mind;
+      autoStart: true;
+      filterMinCF: 0.001;
+      filterBeta: 0.01;
+      warmupTolerance: 5;
+      missTolerance: 5;
+    "
+    color-space="sRGB"
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: true;
+      antialias: true;
+      alpha: true;
+    "
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+  >
+    <!-- 読み込む画像 -->
+    <a-assets timeout="15000">
+      <img
+        id="cu-open"
+        src="../assets/characters/cu_open.png"
+        crossorigin="anonymous"
+      >
+    </a-assets>
+
+    <!-- AR用カメラ -->
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+    ></a-camera>
+
+    <!-- target.mind内の1枚目を認識 -->
+    <a-entity
+      mindar-image-target="targetIndex: 0"
+      target-events
+    >
+      <!--
+        認識確認用の青い板。
+        Cuが見えなくても、この板が出れば追跡自体は成功。
+      -->
+      <a-plane
+        color="#0088ff"
+        opacity="0.35"
+        width="1"
+        height="0.7"
+        position="0 0 0"
+        rotation="0 0 0"
+      ></a-plane>
+
+      <!-- Cu立ち絵 -->
+      <a-image
+        src="#cu-open"
+        width="0.9"
+        height="1.35"
+        position="0 0.38 0.02"
+        rotation="0 0 0"
+        material="
+          transparent: true;
+          alphaTest: 0.01;
+          shader: flat;
+        "
+      ></a-image>
+    </a-entity>
+  </a-scene>
+</body>
+</html>
