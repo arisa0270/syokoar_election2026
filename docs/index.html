@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>星輝子AR</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.min.js"></script>
+
+    <!-- MindAR -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+
+</head>
+
+<body>
+
+    <!-- ======================================= -->
+    <!-- Loading -->
+    <!-- ======================================= -->
+
+    <div id="loading">
+
+        <img
+            src="./assets/ui/title.png"
+            id="loadingLogo"
+            alt="タイトル">
+
+        <p>AR準備中...</p>
+
+    </div>
+
+    <!-- ======================================= -->
+    <!-- AR -->
+    <!-- ======================================= -->
+
+    <div id="ar-container"></div>
+
+    <!-- ======================================= -->
+    <!-- UI -->
+    <!-- ======================================= -->
+
+    <div id="ui">
+
+        <img
+            id="nameImage"
+            src="./assets/ui/name.png"
+            alt="星輝子">
+
+        <img
+            id="voteImage"
+            src="./assets/ui/vote.png"
+            alt="総選挙">
+
+    </div>
+
+    <!-- ======================================= -->
+    <!-- Script -->
+    <!-- ======================================= -->
+
+    <script src="./script.js"></script>
+
+</body>
+
+</html>
