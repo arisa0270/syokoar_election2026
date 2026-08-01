@@ -518,40 +518,85 @@ video {
       // 0.32～1.4秒：菌糸成長
       // ----------------------------------------------
 
-      this.myceliumBranches.forEach((branch) => {
-        const localElapsed =
-          elapsed - 0.32 - branch.delay;
+      // ----------------------------------------------
+// 0.32～1.75秒：菌糸成長 → フェードアウト
+// ----------------------------------------------
 
-        const progress =
-          Math.max(
-            0,
-            Math.min(localElapsed / 0.8, 1)
-          );
+this.myceliumBranches.forEach((branch) => {
+  const localElapsed =
+    elapsed - 0.32 - branch.delay;
 
-        const visiblePoints =
-          Math.floor(
-            branch.pointCount * progress
-          );
+  const growDuration = 0.8;
+  const holdDuration = 0.18;
+  const fadeDuration = 0.45;
 
-        branch.geometry.setDrawRange(
-          0,
-          visiblePoints
-        );
+  const growEnd = growDuration;
+  const holdEnd = growEnd + holdDuration;
+  const fadeEnd = holdEnd + fadeDuration;
 
-        if (progress <= 0) {
-          branch.material.opacity = 0;
-        } else if (progress < 0.75) {
-          branch.material.opacity =
-            Math.min(0.9, progress * 1.4);
-        } else {
-          branch.material.opacity =
-            Math.max(
-              0,
-              0.9 -
-              ((progress - 0.75) / 0.25) * 0.55
-            );
-        }
-      });
+  if (localElapsed <= 0) {
+    branch.geometry.setDrawRange(0, 0);
+    branch.material.opacity = 0;
+    return;
+  }
+
+  // 伸びる
+  if (localElapsed < growEnd) {
+    const progress =
+      Math.min(localElapsed / growDuration, 1);
+
+    const visiblePoints =
+      Math.floor(
+        branch.pointCount * progress
+      );
+
+    branch.geometry.setDrawRange(
+      0,
+      visiblePoints
+    );
+
+    branch.material.opacity =
+      Math.min(0.9, progress * 1.4);
+
+    return;
+  }
+
+  // 伸び切った状態を少し維持
+  if (localElapsed < holdEnd) {
+    branch.geometry.setDrawRange(
+      0,
+      branch.pointCount
+    );
+
+    branch.material.opacity = 0.9;
+
+    return;
+  }
+
+  // フェードアウト
+  if (localElapsed < fadeEnd) {
+    const fadeProgress =
+      (localElapsed - holdEnd) / fadeDuration;
+
+    branch.geometry.setDrawRange(
+      0,
+      branch.pointCount
+    );
+
+    branch.material.opacity =
+      0.9 * (1 - fadeProgress);
+
+    return;
+  }
+
+  // 完全に消す
+  branch.geometry.setDrawRange(
+    0,
+    branch.pointCount
+  );
+
+  branch.material.opacity = 0;
+});
 
       // ----------------------------------------------
       // 1.1～1.5秒：白いフラッシュ
