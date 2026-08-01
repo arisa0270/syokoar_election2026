@@ -1,7 +1,7 @@
-/* =========================================
-   星輝子AR
-   style.css
-========================================= */
+/* =========================================================
+   Version3
+   Shoko AR
+========================================================= */
 
 *{
     margin:0;
@@ -14,16 +14,19 @@ body{
 
     width:100%;
     height:100%;
+
     overflow:hidden;
 
     background:#000;
 
     font-family:
-    "Yu Gothic",
-    "Hiragino Sans",
-    sans-serif;
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
 
 }
+
+/* ============================= */
 
 #ar-container{
 
@@ -31,16 +34,16 @@ body{
 
     inset:0;
 
-    width:100%;
-    height:100%;
+    width:100vw;
+    height:100vh;
 
     overflow:hidden;
 
+    z-index:1;
+
 }
 
-/* -------------------------
-   ローディング画面
-------------------------- */
+/* ============================= */
 
 #loading{
 
@@ -48,38 +51,156 @@ body{
 
     inset:0;
 
+    background:#000;
+
     display:flex;
+
+    flex-direction:column;
 
     justify-content:center;
 
     align-items:center;
 
-    background:#000;
+    gap:24px;
 
     z-index:9999;
 
-}
-
-.loading-box{
-
-    text-align:center;
-
-    color:#fff;
+    transition:opacity .6s;
 
 }
 
-.loading-box h1{
+/* ============================= */
 
-    font-size:32px;
+#loadingLogo{
 
-    margin-bottom:20px;
+    width:min(70vw,420px);
+
+    height:auto;
 
 }
 
-.loading-box p{
+/* ============================= */
+
+#loading p{
+
+    color:white;
 
     font-size:18px;
 
-    opacity:.8;
+    letter-spacing:.08em;
+
+}
+
+/* ============================= */
+
+#ui{
+
+    position:fixed;
+
+    inset:0;
+
+    pointer-events:none;
+
+    z-index:100;
+
+}
+
+/* ============================= */
+
+#nameImage{
+
+    position:absolute;
+
+    left:50%;
+
+    bottom:150px;
+
+    transform:translateX(-50%);
+
+    width:min(62vw,340px);
+
+    opacity:0;
+
+    transition:.8s;
+
+}
+
+/* ============================= */
+
+#voteImage{
+
+    position:absolute;
+
+    left:50%;
+
+    bottom:55px;
+
+    transform:translateX(-50%);
+
+    width:min(85vw,600px);
+
+    opacity:0;
+
+    transition:.8s;
+
+}
+
+/* ============================= */
+
+.show{
+
+    opacity:1 !important;
+
+}
+
+/* ============================= */
+
+.fadeout{
+
+    opacity:0;
+
+    pointer-events:none;
+
+}
+
+/* ============================= */
+/* iPhone SafeArea */
+/* ============================= */
+
+@supports (padding:max(0px)){
+
+    body{
+
+        padding-top:
+            env(safe-area-inset-top);
+
+        padding-bottom:
+            env(safe-area-inset-bottom);
+
+    }
+
+}
+
+/* ============================= */
+/* 横画面 */
+/* ============================= */
+
+@media (orientation:landscape){
+
+    #nameImage{
+
+        width:min(35vw,340px);
+
+        bottom:100px;
+
+    }
+
+    #voteImage{
+
+        width:min(45vw,500px);
+
+        bottom:25px;
+
+    }
 
 }
