@@ -100,14 +100,86 @@ video {
     }
   </style>
 
+<script>
+  // ==================================================
+  // PNGの形を真っ白な発光シルエットにするシェーダー
+  // ==================================================
+
+  AFRAME.registerShader("white-silhouette", {
+    schema: {
+      src: {
+        type: "map",
+        is: "uniform"
+      },
+
+      opacity: {
+        type: "number",
+        is: "uniform",
+        default: 0
+      },
+
+      glowColor: {
+        type: "color",
+        is: "uniform",
+        default: "#ffffff"
+      }
+    },
+
+    vertexShader: `
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+
+        gl_Position =
+          projectionMatrix *
+          modelViewMatrix *
+          vec4(position, 1.0);
+      }
+    `,
+
+    fragmentShader: `
+      uniform sampler2D src;
+      uniform float opacity;
+      uniform vec3 glowColor;
+
+      varying vec2 vUv;
+
+      void main() {
+        vec4 textureColor =
+          texture2D(src, vUv);
+
+        if (textureColor.a < 0.01) {
+          discard;
+        }
+
+        gl_FragColor = vec4(
+          glowColor,
+          textureColor.a * opacity
+        );
+      }
+    `
+  });
+</script>
+
   <script>
-  AFRAME.registerComponent("summon-sequence", {
+    AFRAME.registerComponent("summon-sequence", {
     init: function () {
       this.character = document.querySelector("#cu-character");
-this.characterGlow =
-  document.querySelector("#cu-glow");
+this.glowOuter =
+  document.querySelector("#cu-glow-outer");
 
-this.glowMaterialReady = false;
+this.glowMiddle =
+  document.querySelector("#cu-glow-middle");
+
+this.glowCore =
+  document.querySelector("#cu-glow-core");
+
+this.glowLayers = [
+  this.glowOuter,
+  this.glowMiddle,
+  this.glowCore
+];
 
 this.characterGlow.addEventListener(
   "object3dset",
@@ -391,21 +463,20 @@ this.characterGlow.setAttribute(
         0
       );
 
-      this.characterGlow.setAttribute(
-  "visible",
-  false
-);
+      this.glowLayers.forEach((glow) => {
+  glow.setAttribute("visible", false);
 
-this.characterGlow.setAttribute(
-  "scale",
-  "0.001 0.001 0.001"
-);
+  glow.setAttribute(
+    "material",
+    "opacity",
+    0
+  );
 
-this.characterGlow.setAttribute(
-  "material",
-  "opacity",
-  0
-);
+  glow.setAttribute(
+    "scale",
+    "0.001 0.001 0.001"
+  );
+});
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", false);
@@ -645,102 +716,169 @@ this.myceliumBranches.forEach((branch) => {
 });
 
 // ----------------------------------------------
-// 1.22～1.62秒：立ち絵自体が一瞬発光
+// 1.16～2.02秒：白い輪郭から通常色へ変化
 // ----------------------------------------------
 
-if (elapsed >= 1.22 && elapsed <= 1.62) {
-  const glowProgress =
-    (elapsed - 1.22) / 0.4;
+if (elapsed >= 1.16) {
+  const summonProgress =
+    Math.min(
+      Math.max(
+        (elapsed - 1.16) / 0.86,
+        0
+      ),
+      1
+    );
+
+  const eased =
+    1 - Math.pow(
+      1 - summonProgress,
+      3
+    );
 
   /*
-   * 最初に強く光り、その後すぐ弱くなる。
-   * 加算合成された同じ立ち絵を重ねているため、
-   * 人物の形に沿って明るく見える。
+   * 登場サイズ。
+   * 最初は少し小さく、
+   * ふわっと本来の大きさになる。
    */
-  const glowOpacity =
-    Math.sin(glowProgress * Math.PI) * 0.9;
+  const baseScale =
+    0.73 + eased * 0.27;
 
-  const glowScale =
-    0.72 +
-    Math.min(
-      Math.max((elapsed - 1.22) / 0.72, 0),
-      1
-    ) * 0.28;
+  /*
+   * 白いシルエットの強さ。
+   *
+   * 序盤で急速に発光し、
+   * 後半で通常色へ戻る。
+   */
+  let coreOpacity = 0;
 
-  this.characterGlow.setAttribute(
-    "scale",
-    `${glowScale * 1.015} ${glowScale * 1.015} ${glowScale * 1.015}`
-  );
+  if (summonProgress < 0.28) {
+    coreOpacity =
+      summonProgress / 0.28;
+  } else {
+    coreOpacity =
+      1 -
+      (summonProgress - 0.28) / 0.72;
+  }
 
-  this.characterGlow.setAttribute(
-    "material",
-    "opacity",
-    glowOpacity
-  );
-
-  this.characterGlow.object3D.position.y =
-    this.character.object3D.position.y;
-} else {
-  this.characterGlow.setAttribute(
-    "material",
-    "opacity",
-    0
-  );
-
-  if (elapsed > 1.62) {
-    this.characterGlow.setAttribute(
-      "visible",
-      false
+  coreOpacity =
+    Math.max(
+      0,
+      Math.min(1, coreOpacity)
     );
+
+  /*
+   * 輪郭の外側は中央より弱くする。
+   */
+  const middleOpacity =
+    coreOpacity * 0.48;
+
+  const outerOpacity =
+    coreOpacity * 0.22;
+
+  this.glowCore.setAttribute(
+    "scale",
+    `${baseScale} ${baseScale} ${baseScale}`
+  );
+
+  this.glowMiddle.setAttribute(
+    "scale",
+    `${baseScale * 1.03}
+     ${baseScale * 1.03}
+     ${baseScale * 1.03}`
+  );
+
+  this.glowOuter.setAttribute(
+    "scale",
+    `${baseScale * 1.065}
+     ${baseScale * 1.065}
+     ${baseScale * 1.065}`
+  );
+
+  this.glowCore.setAttribute(
+    "material",
+    "opacity",
+    coreOpacity
+  );
+
+  this.glowMiddle.setAttribute(
+    "material",
+    "opacity",
+    middleOpacity
+  );
+
+  this.glowOuter.setAttribute(
+    "material",
+    "opacity",
+    outerOpacity
+  );
+
+  /*
+   * 白い光が弱くなるにつれて、
+   * 元の色を徐々に表示する。
+   */
+  const colorProgress =
+    Math.max(
+      0,
+      Math.min(
+        (summonProgress - 0.22) / 0.78,
+        1
+      )
+    );
+
+  this.character.setAttribute(
+    "scale",
+    `${baseScale}
+     ${baseScale}
+     ${baseScale}`
+  );
+
+  this.character.setAttribute(
+    "material",
+    "opacity",
+    colorProgress
+  );
+
+  const floating =
+    summonProgress >= 1
+      ? Math.sin(elapsed * 1.8) * 0.018
+      : 0;
+
+  const currentY =
+    0.25 +
+    eased * 0.13 +
+    floating;
+
+  this.character.object3D.position.y =
+    currentY;
+
+  this.glowCore.object3D.position.y =
+    currentY;
+
+  this.glowMiddle.object3D.position.y =
+    currentY;
+
+  this.glowOuter.object3D.position.y =
+    currentY;
+
+  /*
+   * 完全に色が戻ったら、
+   * 発光用の3枚は描画を止める。
+   */
+  if (summonProgress >= 1) {
+    this.glowLayers.forEach((glow) => {
+      glow.setAttribute(
+        "material",
+        "opacity",
+        0
+      );
+
+      glow.setAttribute(
+        "visible",
+        false
+      );
+    });
   }
 }
-
-      // ----------------------------------------------
-      // 1.25秒以降：Cu登場
-      // ----------------------------------------------
-
-      if (elapsed >= 1.25) {
-        const characterProgress =
-          Math.min(
-            (elapsed - 1.25) / 0.72,
-            1
-          );
-
-        const eased =
-          1 -
-          Math.pow(
-            1 - characterProgress,
-            3
-          );
-
-        const scale =
-          0.72 + eased * 0.28;
-
-        this.character.setAttribute(
-          "scale",
-          `${scale} ${scale} ${scale}`
-        );
-
-        this.character.setAttribute(
-          "material",
-          "opacity",
-          eased
-        );
-
-        // 登場後は少しふわふわ動く
-        const floating =
-          characterProgress >= 1
-            ? Math.sin(elapsed * 1.8) * 0.018
-            : 0;
-
-        this.character.object3D.position.y =
-          0.25 +
-          eased * 0.13 +
-          floating;
-
-        this.character.object3D.rotation.z =
-          Math.sin(elapsed * 1.15) * 0.012;
-      }
 
       this.updateBlink(elapsed);
 
@@ -843,12 +981,90 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
 >
   <!-- Cu立ち絵 -->
 <!-- 登場時だけ重ねる発光用の立ち絵 -->
+<!-- =========================================
+     Cu発光レイヤー
+     外側から薄く重ねて輪郭発光に見せる
+========================================= -->
+
+<!-- 外側の淡い光 -->
 <a-image
-  id="cu-glow"
+  id="cu-glow-outer"
+  geometry="
+    primitive: plane;
+    width: 0.9;
+    height: 1.35;
+  "
+  position="0 0.25 0.047"
+  scale="1.06 1.06 1.06"
+  visible="false"
+  material="
+    shader: white-silhouette;
+    src: #cu-open;
+    glowColor: #e9ddff;
+    opacity: 0;
+    transparent: true;
+    blending: additive;
+    depthWrite: false;
+    depthTest: true;
+    side: double;
+  "
+></a-image>
+
+<!-- 中間の光 -->
+<a-image
+  id="cu-glow-middle"
+  geometry="
+    primitive: plane;
+    width: 0.9;
+    height: 1.35;
+  "
+  position="0 0.25 0.048"
+  scale="1.03 1.03 1.03"
+  visible="false"
+  material="
+    shader: white-silhouette;
+    src: #cu-open;
+    glowColor: #ffffff;
+    opacity: 0;
+    transparent: true;
+    blending: additive;
+    depthWrite: false;
+    depthTest: true;
+    side: double;
+  "
+></a-image>
+
+<!-- 人物の形そのものを白くする光 -->
+<a-image
+  id="cu-glow-core"
+  geometry="
+    primitive: plane;
+    width: 0.9;
+    height: 1.35;
+  "
+  position="0 0.25 0.051"
+  scale="1 1 1"
+  visible="false"
+  material="
+    shader: white-silhouette;
+    src: #cu-open;
+    glowColor: #ffffff;
+    opacity: 0;
+    transparent: true;
+    blending: additive;
+    depthWrite: false;
+    depthTest: true;
+    side: double;
+  "
+></a-image>
+
+<!-- 通常色のCu -->
+<a-image
+  id="cu-character"
   src="#cu-open"
   width="0.9"
   height="1.35"
-  position="0 0.25 0.055"
+  position="0 0.25 0.05"
   scale="0.001 0.001 0.001"
   visible="false"
   material="
