@@ -165,8 +165,7 @@ video {
   <script>
     AFRAME.registerComponent("summon-sequence", {
     init: function () {
-      this.character = document.querySelector("#cu-character");
-this.glowOuter =
+      this.glowOuter =
   document.querySelector("#cu-glow-outer");
 
 this.glowMiddle =
@@ -181,25 +180,8 @@ this.glowLayers = [
   this.glowCore
 ];
 
-this.characterGlow.addEventListener(
-  "object3dset",
-  () => {
-    const mesh =
-      this.characterGlow.getObject3D("mesh");
 
-    if (!mesh || !mesh.material) return;
 
-    mesh.material.transparent = true;
-    mesh.material.depthWrite = false;
-    mesh.material.blending =
-      THREE.AdditiveBlending;
-
-    mesh.material.toneMapped = false;
-    mesh.material.needsUpdate = true;
-
-    this.glowMaterialReady = true;
-  }
-);
       this.guide = document.querySelector("#guide");
       this.status = document.querySelector("#status");
 
@@ -402,26 +384,6 @@ this.characterGlow.addEventListener(
         0
       );
 
-      this.characterGlow.setAttribute(
-  "visible",
-  true
-);
-
-this.characterGlow.setAttribute(
-  "src",
-  "#cu-open"
-);
-
-this.characterGlow.setAttribute(
-  "scale",
-  "0.001 0.001 0.001"
-);
-
-this.characterGlow.setAttribute(
-  "material",
-  "opacity",
-  0
-);
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", true);
