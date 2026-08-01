@@ -104,7 +104,30 @@ video {
   AFRAME.registerComponent("summon-sequence", {
     init: function () {
       this.character = document.querySelector("#cu-character");
-      this.flash = document.querySelector("#summon-flash");
+this.characterGlow =
+  document.querySelector("#cu-glow");
+
+this.glowMaterialReady = false;
+
+this.characterGlow.addEventListener(
+  "object3dset",
+  () => {
+    const mesh =
+      this.characterGlow.getObject3D("mesh");
+
+    if (!mesh || !mesh.material) return;
+
+    mesh.material.transparent = true;
+    mesh.material.depthWrite = false;
+    mesh.material.blending =
+      THREE.AdditiveBlending;
+
+    mesh.material.toneMapped = false;
+    mesh.material.needsUpdate = true;
+
+    this.glowMaterialReady = true;
+  }
+);
       this.guide = document.querySelector("#guide");
       this.status = document.querySelector("#status");
 
@@ -307,12 +330,26 @@ video {
         0
       );
 
-      this.flash.setAttribute("visible", true);
-      this.flash.setAttribute(
-        "material",
-        "opacity",
-        0
-      );
+      this.characterGlow.setAttribute(
+  "visible",
+  true
+);
+
+this.characterGlow.setAttribute(
+  "src",
+  "#cu-open"
+);
+
+this.characterGlow.setAttribute(
+  "scale",
+  "0.001 0.001 0.001"
+);
+
+this.characterGlow.setAttribute(
+  "material",
+  "opacity",
+  0
+);
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", true);
@@ -354,12 +391,21 @@ video {
         0
       );
 
-      this.flash.setAttribute("visible", false);
-      this.flash.setAttribute(
-        "material",
-        "opacity",
-        0
-      );
+      this.characterGlow.setAttribute(
+  "visible",
+  false
+);
+
+this.characterGlow.setAttribute(
+  "scale",
+  "0.001 0.001 0.001"
+);
+
+this.characterGlow.setAttribute(
+  "material",
+  "opacity",
+  0
+);
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", false);
@@ -598,31 +644,56 @@ this.myceliumBranches.forEach((branch) => {
   branch.material.opacity = 0;
 });
 
-      // ----------------------------------------------
-      // 1.1～1.5秒：白いフラッシュ
-      // ----------------------------------------------
+// ----------------------------------------------
+// 1.22～1.62秒：立ち絵自体が一瞬発光
+// ----------------------------------------------
 
-      if (elapsed >= 1.08 && elapsed <= 1.52) {
-        const flashProgress =
-          (elapsed - 1.08) / 0.44;
+if (elapsed >= 1.22 && elapsed <= 1.62) {
+  const glowProgress =
+    (elapsed - 1.22) / 0.4;
 
-        const opacity =
-          Math.sin(
-            flashProgress * Math.PI
-          ) * 0.82;
+  /*
+   * 最初に強く光り、その後すぐ弱くなる。
+   * 加算合成された同じ立ち絵を重ねているため、
+   * 人物の形に沿って明るく見える。
+   */
+  const glowOpacity =
+    Math.sin(glowProgress * Math.PI) * 0.9;
 
-        this.flash.setAttribute(
-          "material",
-          "opacity",
-          opacity
-        );
-      } else {
-        this.flash.setAttribute(
-          "material",
-          "opacity",
-          0
-        );
-      }
+  const glowScale =
+    0.72 +
+    Math.min(
+      Math.max((elapsed - 1.22) / 0.72, 0),
+      1
+    ) * 0.28;
+
+  this.characterGlow.setAttribute(
+    "scale",
+    `${glowScale * 1.015} ${glowScale * 1.015} ${glowScale * 1.015}`
+  );
+
+  this.characterGlow.setAttribute(
+    "material",
+    "opacity",
+    glowOpacity
+  );
+
+  this.characterGlow.object3D.position.y =
+    this.character.object3D.position.y;
+} else {
+  this.characterGlow.setAttribute(
+    "material",
+    "opacity",
+    0
+  );
+
+  if (elapsed > 1.62) {
+    this.characterGlow.setAttribute(
+      "visible",
+      false
+    );
+  }
+}
 
       // ----------------------------------------------
       // 1.25秒以降：Cu登場
@@ -770,25 +841,25 @@ this.myceliumBranches.forEach((branch) => {
   mindar-image-target="targetIndex: 0"
   summon-sequence
 >
-  <!-- 菌糸収束時の白いフラッシュ -->
-  <a-circle
-    id="summon-flash"
-    radius="0.42"
-    position="0 0.3 0.08"
-    visible="false"
-    material="
-      color: #ffffff;
-      emissive: #ffffff;
-      emissiveIntensity: 2;
-      transparent: true;
-      opacity: 0;
-      shader: flat;
-      depthWrite: false;
-      side: double;
-    "
-  ></a-circle>
-
   <!-- Cu立ち絵 -->
+<!-- 登場時だけ重ねる発光用の立ち絵 -->
+<a-image
+  id="cu-glow"
+  src="#cu-open"
+  width="0.9"
+  height="1.35"
+  position="0 0.25 0.055"
+  scale="0.001 0.001 0.001"
+  visible="false"
+  material="
+    transparent: true;
+    opacity: 0;
+    alphaTest: 0.01;
+    shader: flat;
+    depthWrite: false;
+  "
+></a-image>
+
   <a-image
     id="cu-character"
     src="#cu-open"
