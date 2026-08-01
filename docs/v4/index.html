@@ -128,6 +128,13 @@ this.characterGlow.addEventListener(
     this.glowMaterialReady = true;
   }
 );
+
+this.co =
+  document.querySelector("#co-character");
+
+this.pa =
+  document.querySelector("#pa-character");
+
       this.guide = document.querySelector("#guide");
       this.status = document.querySelector("#status");
 
@@ -335,6 +342,7 @@ this.characterGlow.addEventListener(
   true
 );
 
+
 this.characterGlow.setAttribute(
   "src",
   "#cu-open"
@@ -349,6 +357,32 @@ this.characterGlow.setAttribute(
   "material",
   "opacity",
   0
+);
+
+this.co.setAttribute("visible",true);
+
+this.co.setAttribute(
+    "scale",
+    "0.001 0.001 0.001"
+);
+
+this.co.setAttribute(
+    "material",
+    "opacity",
+    0
+);
+
+this.pa.setAttribute("visible",true);
+
+this.pa.setAttribute(
+    "scale",
+    "0.001 0.001 0.001"
+);
+
+this.pa.setAttribute(
+    "material",
+    "opacity",
+    0
 );
 
       this.particles.forEach((particle) => {
@@ -389,6 +423,38 @@ this.characterGlow.setAttribute(
         "material",
         "opacity",
         0
+      );
+
+      this.co.setAttribute(
+     "visible",
+     false
+      );
+
+      this.co.setAttribute(
+     "material",
+     "opacity",
+     0
+      );
+
+      this.co.setAttribute(
+     "scale",
+     "0.001 0.001 0.001"
+      );
+
+      this.pa.setAttribute(
+     "visible",
+     false
+      );
+
+      this.pa.setAttribute(
+     "material",
+     "opacity",
+     0
+      );
+
+      this.pa.setAttribute(
+     "scale",
+     "0.001 0.001 0.001"
       );
 
       this.characterGlow.setAttribute(
@@ -742,6 +808,90 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
           Math.sin(elapsed * 1.15) * 0.012;
       }
 
+      //----------------------------------
+// Co
+//----------------------------------
+
+if(elapsed>=1.60){
+
+    const p=Math.min(
+
+        (elapsed-1.60)/0.55,
+
+        1
+
+    );
+
+    const eased=
+
+        1-Math.pow(1-p,3);
+
+    const scale=
+
+        0.72+eased*0.28;
+
+    this.co.setAttribute(
+
+        "scale",
+
+        `${scale} ${scale} ${scale}`
+
+    );
+
+    this.co.setAttribute(
+
+        "material",
+
+        "opacity",
+
+        eased
+
+    );
+
+}
+
+//----------------------------------
+// Pa
+//----------------------------------
+
+if(elapsed>=1.95){
+
+    const p=Math.min(
+
+        (elapsed-1.95)/0.55,
+
+        1
+
+    );
+
+    const eased=
+
+        1-Math.pow(1-p,3);
+
+    const scale=
+
+        0.72+eased*0.28;
+
+    this.pa.setAttribute(
+
+        "scale",
+
+        `${scale} ${scale} ${scale}`
+
+    );
+
+    this.pa.setAttribute(
+
+        "material",
+
+        "opacity",
+
+        eased
+
+    );
+
+}
+
       this.updateBlink(elapsed);
 
       if (elapsed >= 2.05) {
@@ -828,6 +978,19 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
     src="../assets/characters/cu_close.png"
     crossorigin="anonymous"
   >
+  <img
+  id="co-open"
+  src="../assets/characters/co_open.png"
+  crossorigin="anonymous"
+
+  >
+  <img
+  id="pa-open"
+  src="../assets/characters/pa_open.png"
+  crossorigin="anonymous"
+>
+
+
 </a-assets>
 
     <!-- AR用カメラ -->
@@ -875,7 +1038,52 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
       shader: flat;
       depthWrite: false;
     "
+    ></a-image>
+
+<a-image
+  id="co-character"
+  src="#co-open"
+  width="0.88"
+  height="1.32"
+
+  position="0.43 0.43 0.048"
+
+  scale="0.001 0.001 0.001"
+
+  visible="false"
+
+  material="
+    transparent:true;
+    opacity:0;
+    alphaTest:0.01;
+    shader:flat;
+    depthWrite:false;
+  "
   ></a-image>
+
+
+ <a-image
+  id="pa-character"
+  src="#pa-open"
+  width="0.88"
+  height="1.32"
+
+  position="-0.40 0.47 0.049"
+
+  scale="0.001 0.001 0.001"
+
+  visible="false"
+
+  material="
+    transparent:true;
+    opacity:0;
+    alphaTest:0.01;
+    shader:flat;
+    depthWrite:false;
+  "
+ ></a-image> 
+
+
 </a-entity>
   </a-scene>
 </body>
