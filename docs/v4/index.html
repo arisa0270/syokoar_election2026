@@ -18,13 +18,30 @@
 
   <style>
     html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-    }
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* MindARが自動生成するカメラ映像 */
+video {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+}
+
+/* A-Frameの描画キャンバス */
+.a-canvas {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
 
     /* MindAR標準UIの上に出す案内 */
     #guide {
@@ -152,7 +169,6 @@
     "
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded
   >
     <!-- 読み込む画像 -->
     <a-assets timeout="15000">
