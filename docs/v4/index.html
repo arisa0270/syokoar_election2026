@@ -101,20 +101,25 @@ video {
   </style>
 
   <script>
-  /*
-   * 胞子 → Cu召喚演出
-   */
   AFRAME.registerComponent("summon-sequence", {
     init: function () {
       this.character = document.querySelector("#cu-character");
+      this.flash = document.querySelector("#summon-flash");
       this.guide = document.querySelector("#guide");
       this.status = document.querySelector("#status");
 
       this.particles = [];
+      this.myceliumBranches = [];
+
       this.animationStarted = false;
       this.animationStartTime = 0;
 
+      this.blinkState = 0;
+      this.nextBlinkTime = 0;
+      this.nextBlinkChangeTime = 0;
+
       this.createParticles();
+      this.createMycelium();
 
       this.el.addEventListener("targetFound", () => {
         console.log("認識成功");
@@ -133,39 +138,48 @@ video {
 
         this.resetSequence();
       });
+
+      this.resetSequence();
     },
 
-    /*
-     * 胞子をプログラムで生成
-     */
+    // ==================================================
+    // 胞子生成
+    // ==================================================
+
     createParticles: function () {
       const colors = [
         "#ffffff",
-        "#e8d8ff",
-        "#d9ffe3",
-        "#ffd9f1"
+        "#eadcff",
+        "#d9ffe4",
+        "#ffd9ef"
       ];
 
-      for (let i = 0; i < 55; i++) {
+      for (let i = 0; i < 48; i++) {
         const particle = document.createElement("a-sphere");
 
-        const size = 0.008 + Math.random() * 0.018;
+        const size = 0.007 + Math.random() * 0.014;
+        const color =
+          colors[Math.floor(Math.random() * colors.length)];
 
         particle.setAttribute("radius", size);
 
+        particle.setAttribute("segments-width", 8);
+        particle.setAttribute("segments-height", 6);
+
         particle.setAttribute("material", {
-          color: colors[Math.floor(Math.random() * colors.length)],
-          emissive: colors[Math.floor(Math.random() * colors.length)],
-          emissiveIntensity: 1.3,
+          color,
+          emissive: color,
+          emissiveIntensity: 1.2,
           transparent: true,
           opacity: 0,
-          shader: "standard"
+          shader: "standard",
+          depthWrite: false
         });
 
         particle.object3D.position.set(
           (Math.random() - 0.5) * 1.5,
-          (Math.random() - 0.5) * 1.1,
-          0.03 + Math.random() * 0.15
+          (Math.random() - 0.5) * 1.05,
+          0.07 + Math.random() * 0.09
         );
 
         particle.dataset.startX = particle.object3D.position.x;
@@ -180,32 +194,172 @@ video {
       }
     },
 
-    /*
-     * 召喚演出開始
-     */
+    // ==================================================
+    // 菌糸生成
+    // ==================================================
+
+    createMycelium: function () {
+      const group = new THREE.Group();
+
+      const branchCount = 9;
+
+      for (let branchIndex = 0; branchIndex < branchCount; branchIndex++) {
+        const pointCount = 28;
+        const points = [];
+
+        const startX = (Math.random() - 0.5) * 0.8;
+        const startY = -0.32 - Math.random() * 0.08;
+
+        const endX = (Math.random() - 0.5) * 0.35;
+        const endY = 0.22 + Math.random() * 0.2;
+
+        const bend =
+          (Math.random() - 0.5) * 0.28;
+
+        for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+          const progress =
+            pointIndex / (pointCount - 1);
+
+          const curve =
+            Math.sin(progress * Math.PI) * bend;
+
+          const x =
+            startX +
+            (endX - startX) * progress +
+            curve;
+
+          const y =
+            startY +
+            (endY - startY) * progress +
+            Math.sin(
+              progress * Math.PI * 2 +
+              branchIndex
+            ) * 0.012;
+
+          points.push(
+            new THREE.Vector3(
+              x,
+              y,
+              0.035 + branchIndex * 0.0005
+            )
+          );
+        }
+
+        const geometry =
+          new THREE.BufferGeometry().setFromPoints(points);
+
+        geometry.setDrawRange(0, 0);
+
+        const material =
+          new THREE.LineBasicMaterial({
+            color:
+              branchIndex % 3 === 0
+                ? 0xe6d8ff
+                : 0xf7fff8,
+
+            transparent: true,
+            opacity: 0,
+
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+          });
+
+        const line = new THREE.Line(
+          geometry,
+          material
+        );
+
+        group.add(line);
+
+        this.myceliumBranches.push({
+          line,
+          geometry,
+          material,
+          pointCount,
+          delay: branchIndex * 0.045
+        });
+      }
+
+      this.myceliumGroup = group;
+      this.el.object3D.add(group);
+    },
+
+    // ==================================================
+    // 演出開始
+    // ==================================================
+
     startSequence: function () {
       this.animationStarted = true;
       this.animationStartTime = performance.now();
 
+      this.blinkState = 0;
+      this.nextBlinkTime = 3.2 + Math.random() * 1.5;
+
       this.character.setAttribute("visible", true);
-      this.character.setAttribute("scale", "0.001 0.001 0.001");
-      this.character.setAttribute("material", "opacity", 0);
+      this.character.setAttribute("src", "#cu-open");
+      this.character.setAttribute(
+        "scale",
+        "0.001 0.001 0.001"
+      );
+      this.character.setAttribute(
+        "material",
+        "opacity",
+        0
+      );
+
+      this.flash.setAttribute("visible", true);
+      this.flash.setAttribute(
+        "material",
+        "opacity",
+        0
+      );
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", true);
-        particle.setAttribute("material", "opacity", 0);
+        particle.setAttribute(
+          "material",
+          "opacity",
+          0
+        );
+
+        particle.object3D.position.set(
+          Number(particle.dataset.startX),
+          Number(particle.dataset.startY),
+          Number(particle.dataset.startZ)
+        );
+      });
+
+      this.myceliumBranches.forEach((branch) => {
+        branch.geometry.setDrawRange(0, 0);
+        branch.material.opacity = 0;
       });
     },
 
-    /*
-     * 認識を外した際に初期状態へ戻す
-     */
+    // ==================================================
+    // 初期状態へ戻す
+    // ==================================================
+
     resetSequence: function () {
       this.animationStarted = false;
 
       this.character.setAttribute("visible", false);
-      this.character.setAttribute("scale", "0.001 0.001 0.001");
-      this.character.setAttribute("material", "opacity", 0);
+      this.character.setAttribute("src", "#cu-open");
+      this.character.setAttribute(
+        "scale",
+        "0.001 0.001 0.001"
+      );
+      this.character.setAttribute(
+        "material",
+        "opacity",
+        0
+      );
+
+      this.flash.setAttribute("visible", false);
+      this.flash.setAttribute(
+        "material",
+        "opacity",
+        0
+      );
 
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", false);
@@ -216,76 +370,235 @@ video {
           Number(particle.dataset.startZ)
         );
       });
+
+      this.myceliumBranches.forEach((branch) => {
+        branch.geometry.setDrawRange(0, 0);
+        branch.material.opacity = 0;
+      });
     },
 
-    /*
-     * 毎フレームのアニメーション
-     */
+    // ==================================================
+    // 瞬き
+    // ==================================================
+
+    updateBlink: function (elapsed) {
+      if (elapsed < 2.1) return;
+
+      if (
+        this.blinkState === 0 &&
+        elapsed >= this.nextBlinkTime
+      ) {
+        this.character.setAttribute("src", "#cu-half");
+
+        this.blinkState = 1;
+        this.nextBlinkChangeTime = elapsed + 0.07;
+
+        return;
+      }
+
+      if (
+        this.blinkState === 1 &&
+        elapsed >= this.nextBlinkChangeTime
+      ) {
+        this.character.setAttribute("src", "#cu-close");
+
+        this.blinkState = 2;
+        this.nextBlinkChangeTime = elapsed + 0.09;
+
+        return;
+      }
+
+      if (
+        this.blinkState === 2 &&
+        elapsed >= this.nextBlinkChangeTime
+      ) {
+        this.character.setAttribute("src", "#cu-half");
+
+        this.blinkState = 3;
+        this.nextBlinkChangeTime = elapsed + 0.07;
+
+        return;
+      }
+
+      if (
+        this.blinkState === 3 &&
+        elapsed >= this.nextBlinkChangeTime
+      ) {
+        this.character.setAttribute("src", "#cu-open");
+
+        this.blinkState = 0;
+
+        this.nextBlinkTime =
+          elapsed + 2.4 + Math.random() * 3.2;
+      }
+    },
+
+    // ==================================================
+    // 毎フレーム更新
+    // ==================================================
+
     tick: function (time) {
       if (!this.animationStarted) return;
 
-      const elapsed = (time - this.animationStartTime) / 1000;
+      const elapsed =
+        (time - this.animationStartTime) / 1000;
 
-      /*
-       * 0～1.4秒：胞子出現・中央へ集合
-       */
-      const particleProgress = Math.min(elapsed / 1.4, 1);
+      // ----------------------------------------------
+      // 0～1.35秒：胞子が中央へ集まる
+      // ----------------------------------------------
 
-      this.particles.forEach((particle, index) => {
-        const phase = Number(particle.dataset.phase);
-        const speed = Number(particle.dataset.speed);
+      const particleProgress =
+        Math.min(elapsed / 1.35, 1);
 
-        const startX = Number(particle.dataset.startX);
-        const startY = Number(particle.dataset.startY);
-        const startZ = Number(particle.dataset.startZ);
+      this.particles.forEach((particle) => {
+        const phase =
+          Number(particle.dataset.phase);
 
-        const targetX = 0;
-        const targetY = 0.32;
-        const targetZ = 0.04;
+        const speed =
+          Number(particle.dataset.speed);
+
+        const startX =
+          Number(particle.dataset.startX);
+
+        const startY =
+          Number(particle.dataset.startY);
+
+        const startZ =
+          Number(particle.dataset.startZ);
 
         const eased =
-          1 - Math.pow(1 - particleProgress, 3);
+          1 - Math.pow(
+            1 - particleProgress,
+            3
+          );
 
         particle.object3D.position.x =
           startX +
-          (targetX - startX) * eased +
-          Math.sin(elapsed * speed * 4 + phase) * 0.015;
+          (0 - startX) * eased +
+          Math.sin(
+            elapsed * speed * 4 + phase
+          ) * 0.014;
 
         particle.object3D.position.y =
           startY +
-          (targetY - startY) * eased +
-          Math.cos(elapsed * speed * 3 + phase) * 0.015;
+          (0.3 - startY) * eased +
+          Math.cos(
+            elapsed * speed * 3 + phase
+          ) * 0.014;
 
         particle.object3D.position.z =
           startZ +
-          (targetZ - startZ) * eased;
+          (0.08 - startZ) * eased;
 
-        let opacity;
+        let opacity = 1;
 
-        if (particleProgress < 0.25) {
-          opacity = particleProgress / 0.25;
-        } else {
-          opacity = 1 - Math.max(0, particleProgress - 0.72) / 0.28;
+        if (particleProgress < 0.2) {
+          opacity =
+            particleProgress / 0.2;
+        }
+
+        if (particleProgress > 0.72) {
+          opacity =
+            1 -
+            (particleProgress - 0.72) /
+            0.28;
         }
 
         particle.setAttribute(
           "material",
           "opacity",
-          Math.max(0, Math.min(1, opacity))
+          Math.max(
+            0,
+            Math.min(1, opacity)
+          )
         );
       });
 
-      /*
-       * 1.05秒以降：Cu登場
-       */
-      if (elapsed >= 1.05) {
+      // ----------------------------------------------
+      // 0.32～1.4秒：菌糸成長
+      // ----------------------------------------------
+
+      this.myceliumBranches.forEach((branch) => {
+        const localElapsed =
+          elapsed - 0.32 - branch.delay;
+
+        const progress =
+          Math.max(
+            0,
+            Math.min(localElapsed / 0.8, 1)
+          );
+
+        const visiblePoints =
+          Math.floor(
+            branch.pointCount * progress
+          );
+
+        branch.geometry.setDrawRange(
+          0,
+          visiblePoints
+        );
+
+        if (progress <= 0) {
+          branch.material.opacity = 0;
+        } else if (progress < 0.75) {
+          branch.material.opacity =
+            Math.min(0.9, progress * 1.4);
+        } else {
+          branch.material.opacity =
+            Math.max(
+              0,
+              0.9 -
+              ((progress - 0.75) / 0.25) * 0.55
+            );
+        }
+      });
+
+      // ----------------------------------------------
+      // 1.1～1.5秒：白いフラッシュ
+      // ----------------------------------------------
+
+      if (elapsed >= 1.08 && elapsed <= 1.52) {
+        const flashProgress =
+          (elapsed - 1.08) / 0.44;
+
+        const opacity =
+          Math.sin(
+            flashProgress * Math.PI
+          ) * 0.82;
+
+        this.flash.setAttribute(
+          "material",
+          "opacity",
+          opacity
+        );
+      } else {
+        this.flash.setAttribute(
+          "material",
+          "opacity",
+          0
+        );
+      }
+
+      // ----------------------------------------------
+      // 1.25秒以降：Cu登場
+      // ----------------------------------------------
+
+      if (elapsed >= 1.25) {
         const characterProgress =
-          Math.min((elapsed - 1.05) / 0.75, 1);
+          Math.min(
+            (elapsed - 1.25) / 0.72,
+            1
+          );
 
         const eased =
-          1 - Math.pow(1 - characterProgress, 3);
+          1 -
+          Math.pow(
+            1 - characterProgress,
+            3
+          );
 
-        const scale = 0.72 + eased * 0.28;
+        const scale =
+          0.72 + eased * 0.28;
 
         this.character.setAttribute(
           "scale",
@@ -298,37 +611,58 @@ video {
           eased
         );
 
-        /*
-         * 少し下から上へ現れる
-         */
+        // 登場後は少しふわふわ動く
+        const floating =
+          characterProgress >= 1
+            ? Math.sin(elapsed * 1.8) * 0.018
+            : 0;
+
         this.character.object3D.position.y =
-          0.26 + eased * 0.12;
+          0.25 +
+          eased * 0.13 +
+          floating;
+
+        this.character.object3D.rotation.z =
+          Math.sin(elapsed * 1.15) * 0.012;
       }
 
-      /*
-       * 演出完了後
-       */
-      if (elapsed >= 1.9) {
-        this.status.textContent = "星輝子、召喚！";
+      this.updateBlink(elapsed);
+
+      if (elapsed >= 2.05) {
+        this.status.textContent =
+          "星輝子、召喚！";
       }
     }
   });
 
   window.addEventListener("DOMContentLoaded", () => {
-    const scene = document.querySelector("a-scene");
-    const status = document.querySelector("#status");
+    const scene =
+      document.querySelector("a-scene");
+
+    const status =
+      document.querySelector("#status");
 
     scene.addEventListener("arReady", () => {
       console.log("MindAR起動成功");
-      status.textContent = "認識画像を探しています";
+
+      status.textContent =
+        "認識画像を探しています";
     });
 
-    scene.addEventListener("arError", (event) => {
-      console.error("MindAR起動失敗", event);
-      status.textContent = "ARの起動に失敗しました";
-    });
+    scene.addEventListener(
+      "arError",
+      (event) => {
+        console.error(
+          "MindAR起動失敗",
+          event
+        );
+
+        status.textContent =
+          "ARの起動に失敗しました";
+      }
+    );
   });
-  </script>
+</script>
 </head>
 
 <body>
@@ -361,12 +695,24 @@ video {
   >
     <!-- 読み込む画像 -->
     <a-assets timeout="15000">
-      <img
-        id="cu-open"
-        src="../assets/characters/cu_open.png"
-        crossorigin="anonymous"
-      >
-    </a-assets>
+  <img
+    id="cu-open"
+    src="../assets/characters/cu_open.png"
+    crossorigin="anonymous"
+  >
+
+  <img
+    id="cu-half"
+    src="../assets/characters/cu_half.png"
+    crossorigin="anonymous"
+  >
+
+  <img
+    id="cu-close"
+    src="../assets/characters/cu_close.png"
+    crossorigin="anonymous"
+  >
+</a-assets>
 
     <!-- AR用カメラ -->
     <a-camera
@@ -379,13 +725,31 @@ video {
   mindar-image-target="targetIndex: 0"
   summon-sequence
 >
-  <!-- Cu立ち絵：最初は非表示 -->
+  <!-- 菌糸収束時の白いフラッシュ -->
+  <a-circle
+    id="summon-flash"
+    radius="0.42"
+    position="0 0.3 0.08"
+    visible="false"
+    material="
+      color: #ffffff;
+      emissive: #ffffff;
+      emissiveIntensity: 2;
+      transparent: true;
+      opacity: 0;
+      shader: flat;
+      depthWrite: false;
+      side: double;
+    "
+  ></a-circle>
+
+  <!-- Cu立ち絵 -->
   <a-image
     id="cu-character"
     src="#cu-open"
     width="0.9"
     height="1.35"
-    position="0 0.26 0.05"
+    position="0 0.25 0.05"
     scale="0.001 0.001 0.001"
     visible="false"
     material="
