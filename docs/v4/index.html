@@ -171,6 +171,42 @@ this.pa =
 
       this.resetSequence();
     },
+  
+    // ==================================================
+// まばたき設定
+// ==================================================
+
+this.blinkState = {
+  cu: {
+    character: this.character,
+    open: "#cu-open",
+    half: "#cu-half",
+    close: "#cu-close",
+    nextBlink: 3.2,
+    blinking: false,
+    blinkStart: 0
+  },
+
+  co: {
+    character: this.co,
+    open: "#co-open",
+    half: "#co-half",
+    close: "#co-close",
+    nextBlink: 4.1,
+    blinking: false,
+    blinkStart: 0
+  },
+
+  pa: {
+    character: this.pa,
+    open: "#pa-open",
+    half: "#pa-half",
+    close: "#pa-close",
+    nextBlink: 5.0,
+    blinking: false,
+    blinkStart: 0
+  }
+};
 
     // ==================================================
     // 胞子生成
@@ -487,63 +523,109 @@ this.characterGlow.setAttribute(
         branch.geometry.setDrawRange(0, 0);
         branch.material.opacity = 0;
       });
+
+
+      // まばたきを初期状態へ戻す
+this.character.setAttribute("src", "#cu-open");
+this.co.setAttribute("src", "#co-open");
+this.pa.setAttribute("src", "#pa-open");
+
+this.blinkState.cu.blinking = false;
+this.blinkState.co.blinking = false;
+this.blinkState.pa.blinking = false;
+
+this.blinkState.cu.nextBlink = 3.2;
+this.blinkState.co.nextBlink = 4.1;
+this.blinkState.pa.nextBlink = 5.0;
+
     },
 
     // ==================================================
-    // 瞬き
-    // ==================================================
+// 3人のまばたき
+// ==================================================
 
-    updateBlink: function (elapsed) {
-      if (elapsed < 2.1) return;
+updateBlink: function (elapsed) {
 
-      if (
-        this.blinkState === 0 &&
-        elapsed >= this.nextBlinkTime
-      ) {
-        this.character.setAttribute("src", "#cu-half");
+  Object.values(this.blinkState).forEach((blink) => {
 
-        this.blinkState = 1;
-        this.nextBlinkChangeTime = elapsed + 0.07;
+    // ----------------------------------------------
+    // まばたき開始
+    // ----------------------------------------------
 
-        return;
-      }
+    if (
+      !blink.blinking &&
+      elapsed >= blink.nextBlink
+    ) {
 
-      if (
-        this.blinkState === 1 &&
-        elapsed >= this.nextBlinkChangeTime
-      ) {
-        this.character.setAttribute("src", "#cu-close");
+      blink.blinking = true;
+      blink.blinkStart = elapsed;
+    }
 
-        this.blinkState = 2;
-        this.nextBlinkChangeTime = elapsed + 0.09;
+    if (!blink.blinking) return;
 
-        return;
-      }
+    const blinkElapsed =
+      elapsed - blink.blinkStart;
 
-      if (
-        this.blinkState === 2 &&
-        elapsed >= this.nextBlinkChangeTime
-      ) {
-        this.character.setAttribute("src", "#cu-half");
+    // ----------------------------------------------
+    // 開 → 半目
+    // ----------------------------------------------
 
-        this.blinkState = 3;
-        this.nextBlinkChangeTime = elapsed + 0.07;
+    if (blinkElapsed < 0.07) {
 
-        return;
-      }
+      blink.character.setAttribute(
+        "src",
+        blink.half
+      );
 
-      if (
-        this.blinkState === 3 &&
-        elapsed >= this.nextBlinkChangeTime
-      ) {
-        this.character.setAttribute("src", "#cu-open");
+    }
 
-        this.blinkState = 0;
+    // ----------------------------------------------
+    // 半目 → 閉じる
+    // ----------------------------------------------
 
-        this.nextBlinkTime =
-          elapsed + 2.4 + Math.random() * 3.2;
-      }
-    },
+    else if (blinkElapsed < 0.14) {
+
+      blink.character.setAttribute(
+        "src",
+        blink.close
+      );
+
+    }
+
+    // ----------------------------------------------
+    // 閉じる → 半目
+    // ----------------------------------------------
+
+    else if (blinkElapsed < 0.21) {
+
+      blink.character.setAttribute(
+        "src",
+        blink.half
+      );
+
+    }
+
+    // ----------------------------------------------
+    // 半目 → 開く
+    // ----------------------------------------------
+
+    else {
+
+      blink.character.setAttribute(
+        "src",
+        blink.open
+      );
+
+      blink.blinking = false;
+
+      // 次の瞬きを3～6秒後にランダム設定
+      blink.nextBlink =
+        elapsed +
+        3 +
+        Math.random() * 3;
+    }
+  });
+},
 
     // ==================================================
     // 毎フレーム更新
