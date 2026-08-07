@@ -844,47 +844,37 @@ if(elapsed>=1.60){
 // Pa
 //----------------------------------
 
-if(elapsed>=1.95){
+if (elapsed >= 1.95) {
 
-    const p=Math.min(
+  const p = Math.min(
+    (elapsed - 1.95) / 0.55,
+    1
+  );
 
-        (elapsed-1.95)/0.55,
+  const eased =
+    1 - Math.pow(1 - p, 3);
 
-        1
+  const scale =
+    0.72 + eased * 0.28;
 
-    );
+  this.pa.setAttribute(
+    "scale",
+    `${scale} ${scale} ${scale}`
+  );
 
-    const eased=
+  this.pa.setAttribute(
+    "material",
+    "opacity",
+    eased
+  );
 
-        1-Math.pow(1-p,3);
+} // ← これが抜けてた
 
-    const scale=
 
-        0.72+eased*0.28;
-
-    this.pa.setAttribute(
-
-        "scale",
-
-        `${scale} ${scale} ${scale}`
-
-    );
-
-    this.pa.setAttribute(
-
-        "material",
-
-        "opacity",
-
-        eased
-
-    );
-
-    // ----------------------------------------------
+// ----------------------------------------------
 // 3人のふわふわ動作
 // ----------------------------------------------
 
-// 登場演出が落ち着いてから開始
 if (elapsed >= 2.4) {
 
   // 基準位置
@@ -892,15 +882,15 @@ if (elapsed >= 2.4) {
   const coBaseY = 0.43;
   const paBaseY = 0.25;
 
-  // Cu：ゆっくり・少し大きめ
+  // Cu
   const cuFloat =
     Math.sin(elapsed * 1.35) * 0.018;
 
-  // Co：Cuより少し速く、位相をずらす
+  // Co
   const coFloat =
     Math.sin(elapsed * 1.55 + 1.8) * 0.015;
 
-  // Pa：逆方向気味に、やや小さく
+  // Pa
   const paFloat =
     Math.sin(elapsed * 1.25 + 3.4) * 0.012;
 
@@ -913,7 +903,7 @@ if (elapsed >= 2.4) {
   this.pa.object3D.position.y =
     paBaseY + paFloat;
 
-  // ほんの少しだけ左右に揺らす
+  // ごく小さく左右へ揺らす
   this.character.object3D.rotation.z =
     Math.sin(elapsed * 0.95) * 0.012;
 
@@ -925,11 +915,12 @@ if (elapsed >= 2.4) {
 
 }
 
-      this.updateBlink(elapsed);
+this.updateBlink(elapsed);
 
-      if (elapsed >= 2.05) {
-        this.status.textContent =
-          "星輝子、召喚！";
+if (elapsed >= 2.05) {
+  this.status.textContent =
+    "星輝子、召喚！";
+  }
       }
     }
   });
