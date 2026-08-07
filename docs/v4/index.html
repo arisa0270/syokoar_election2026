@@ -903,15 +903,15 @@ if (elapsed >= 2.4) {
   this.pa.object3D.position.y =
     paBaseY + paFloat;
 
-  // ごく小さく左右へ揺らす
-  this.character.object3D.rotation.z =
-    Math.sin(elapsed * 0.95) * 0.012;
+// ごく小さく左右へ揺らす
+this.character.object3D.rotation.z =
+  Math.sin(elapsed * 0.95) * 0.012;
 
-  this.co.object3D.rotation.z =
-    Math.sin(elapsed * 1.05 + 1.4) * 0.010;
+this.co.object3D.rotation.z =
+  Math.sin(elapsed * 1.05 + 1.4) * 0.010;
 
-  this.pa.object3D.rotation.z =
-    Math.sin(elapsed * 0.85 + 2.7) * 0.008;
+this.pa.object3D.rotation.z =
+  Math.sin(elapsed * 0.85 + 2.7) * 0.008;
 
 }
 
@@ -920,38 +920,47 @@ this.updateBlink(elapsed);
 if (elapsed >= 2.05) {
   this.status.textContent =
     "星輝子、召喚！";
-  }
-      }
-    }
+}
+
+// tick終了
+}
+
+});
+
+// ==================================================
+// MindAR起動イベント
+// ==================================================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const scene =
+    document.querySelector("a-scene");
+
+  const status =
+    document.querySelector("#status");
+
+  scene.addEventListener("arReady", () => {
+
+    console.log("MindAR起動成功");
+
+    status.textContent =
+      "認識画像を探しています";
+
   });
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const scene =
-      document.querySelector("a-scene");
+  scene.addEventListener("arError", (event) => {
 
-    const status =
-      document.querySelector("#status");
-
-    scene.addEventListener("arReady", () => {
-      console.log("MindAR起動成功");
-
-      status.textContent =
-        "認識画像を探しています";
-    });
-
-    scene.addEventListener(
-      "arError",
-      (event) => {
-        console.error(
-          "MindAR起動失敗",
-          event
-        );
-
-        status.textContent =
-          "ARの起動に失敗しました";
-      }
+    console.error(
+      "MindAR起動失敗",
+      event
     );
+
+    status.textContent =
+      "ARの起動に失敗しました";
+
   });
+
+});
 </script>
 </head>
 
