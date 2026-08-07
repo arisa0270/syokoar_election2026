@@ -135,6 +135,42 @@ this.co =
 this.pa =
   document.querySelector("#pa-character");
 
+
+// ==================================================
+// まばたき設定
+// ==================================================
+
+this.blinkState = {
+  cu: {
+    character: this.character,
+    open: "#cu-open",
+    half: "#cu-half",
+    close: "#cu-close",
+    nextBlink: 3.2,
+    blinking: false,
+    blinkStart: 0
+  },
+
+  co: {
+    character: this.co,
+    open: "#co-open",
+    half: "#co-half",
+    close: "#co-close",
+    nextBlink: 4.1,
+    blinking: false,
+    blinkStart: 0
+  },
+
+  pa: {
+    character: this.pa,
+    open: "#pa-open",
+    half: "#pa-half",
+    close: "#pa-close",
+    nextBlink: 5.0,
+    blinking: false,
+    blinkStart: 0
+  }
+
       this.guide = document.querySelector("#guide");
       this.status = document.querySelector("#status");
 
@@ -171,41 +207,6 @@ this.pa =
 
       this.resetSequence();
     },
-  
-    // ==================================================
-// まばたき設定
-// ==================================================
-
-this.blinkState = {
-  cu: {
-    character: this.character,
-    open: "#cu-open",
-    half: "#cu-half",
-    close: "#cu-close",
-    nextBlink: 3.2,
-    blinking: false,
-    blinkStart: 0
-  },
-
-  co: {
-    character: this.co,
-    open: "#co-open",
-    half: "#co-half",
-    close: "#co-close",
-    nextBlink: 4.1,
-    blinking: false,
-    blinkStart: 0
-  },
-
-  pa: {
-    character: this.pa,
-    open: "#pa-open",
-    half: "#pa-half",
-    close: "#pa-close",
-    nextBlink: 5.0,
-    blinking: false,
-    blinkStart: 0
-  }
 };
 
     // ==================================================
