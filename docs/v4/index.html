@@ -532,13 +532,28 @@ this.character.setAttribute("src", "#cu-open");
 this.co.setAttribute("src", "#co-open");
 this.pa.setAttribute("src", "#pa-open");
 
-this.blinkState.cu.blinking = false;
-this.blinkState.co.blinking = false;
-this.blinkState.pa.blinking = false;
+// まばたき状態をリセット
+if (this.blinkState) {
 
-this.blinkState.cu.nextBlink = 3.2;
-this.blinkState.co.nextBlink = 4.1;
-this.blinkState.pa.nextBlink = 5.0;
+  if (this.blinkState.cu) {
+    this.blinkState.cu.blinking = false;
+    this.blinkState.cu.blinkStart = 0;
+    this.blinkState.cu.nextBlink = 3.2;
+  }
+
+  if (this.blinkState.co) {
+    this.blinkState.co.blinking = false;
+    this.blinkState.co.blinkStart = 0;
+    this.blinkState.co.nextBlink = 4.1;
+  }
+
+  if (this.blinkState.pa) {
+    this.blinkState.pa.blinking = false;
+    this.blinkState.pa.blinkStart = 0;
+    this.blinkState.pa.nextBlink = 5.0;
+  }
+
+}
 
     },
 
@@ -547,6 +562,8 @@ this.blinkState.pa.nextBlink = 5.0;
 // ==================================================
 
 updateBlink: function (elapsed) {
+
+  if (!this.blinkState) return;
 
   Object.values(this.blinkState).forEach((blink) => {
 
