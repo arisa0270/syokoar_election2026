@@ -385,16 +385,6 @@ this.pa.setAttribute(
     0
 );
 
-// 召喚開始時から3人の角度を固定
-this.character.object3D.rotation.z =
-  THREE.MathUtils.degToRad(-2.5);
-
-this.co.object3D.rotation.z =
-  THREE.MathUtils.degToRad(2.5);
-
-this.pa.object3D.rotation.z = 0;
-
-
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", true);
         particle.setAttribute(
@@ -1071,10 +1061,7 @@ window.addEventListener("DOMContentLoaded", () => {
     src="#cu-open"
     width="0.9"
     height="1.35"
-
-    position="-0.40 0.47 0.045"
-    rotation="0 0 -2.5"
-
+    position="-0.40 0.47 0.05"
     scale="0.001 0.001 0.001"
     visible="false"
     material="
@@ -1093,7 +1080,6 @@ window.addEventListener("DOMContentLoaded", () => {
   height="1.32"
 
   position="0.43 0.43 0.045"
-  rotation="0 0 2.5"
 
   scale="0.001 0.001 0.001"
 
@@ -1115,8 +1101,8 @@ window.addEventListener("DOMContentLoaded", () => {
   width="0.88"
   height="1.32"
 
-  position="0 0.25 0.058"
-  rotation="0 0 0"
+  position="0 0.25 0.049"
+
   scale="0.001 0.001 0.001"
 
   visible="false"
