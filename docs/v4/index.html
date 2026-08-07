@@ -931,21 +931,6 @@ if (elapsed >= 2.4) {
   this.pa.object3D.position.y =
     paBaseY + paFloat;
 
-  // 角度演出はやめたので、ごく小さい揺れだけ
-  this.character.object3D.rotation.z =
-    Math.sin(elapsed * 0.95) *
-    0.006 *
-    smoothBlend;
-
-  this.co.object3D.rotation.z =
-    Math.sin(elapsed * 1.05 + 1.4) *
-    0.006 *
-    smoothBlend;
-
-  this.pa.object3D.rotation.z =
-    Math.sin(elapsed * 0.85 + 2.7) *
-    0.005 *
-    smoothBlend;
 }
 
 }
@@ -1087,7 +1072,7 @@ if (elapsed >= 2.4) {
   width="0.9"
   height="1.35"
   position="-0.40 0.47 0.045"
-  rotation="0 0 -2.5"
+  rotation="0 0 0"
   scale="0.001 0.001 0.001"
   visible="false"
   material="
