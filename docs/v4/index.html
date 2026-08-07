@@ -385,6 +385,16 @@ this.pa.setAttribute(
     0
 );
 
+// 召喚開始時から3人の角度を固定
+this.character.object3D.rotation.z =
+  THREE.MathUtils.degToRad(-2.5);
+
+this.co.object3D.rotation.z =
+  THREE.MathUtils.degToRad(2.5);
+
+this.pa.object3D.rotation.z = 0;
+
+
       this.particles.forEach((particle) => {
         particle.setAttribute("visible", true);
         particle.setAttribute(
