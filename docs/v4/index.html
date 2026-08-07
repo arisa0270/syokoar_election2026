@@ -794,8 +794,12 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
         );
 
         // 登場後は少しふわふわ動く
+
         this.character.object3D.position.y =
-        0.34 + eased * 0.13;
+          0.25 +
+          eased * 0.13 +
+          floating;
+
       }
 
       //----------------------------------
@@ -844,37 +848,47 @@ if(elapsed>=1.60){
 // Pa
 //----------------------------------
 
-if (elapsed >= 1.95) {
+if(elapsed>=1.95){
 
-  const p = Math.min(
-    (elapsed - 1.95) / 0.55,
-    1
-  );
+    const p=Math.min(
 
-  const eased =
-    1 - Math.pow(1 - p, 3);
+        (elapsed-1.95)/0.55,
 
-  const scale =
-    0.72 + eased * 0.28;
+        1
 
-  this.pa.setAttribute(
-    "scale",
-    `${scale} ${scale} ${scale}`
-  );
+    );
 
-  this.pa.setAttribute(
-    "material",
-    "opacity",
-    eased
-  );
+    const eased=
 
-} // ← これが抜けてた
+        1-Math.pow(1-p,3);
 
+    const scale=
 
-// ----------------------------------------------
+        0.72+eased*0.28;
+
+    this.pa.setAttribute(
+
+        "scale",
+
+        `${scale} ${scale} ${scale}`
+
+    );
+
+    this.pa.setAttribute(
+
+        "material",
+
+        "opacity",
+
+        eased
+
+    );
+
+    // ----------------------------------------------
 // 3人のふわふわ動作
 // ----------------------------------------------
 
+// 登場演出が落ち着いてから開始
 if (elapsed >= 2.4) {
 
   // 基準位置
@@ -882,15 +896,15 @@ if (elapsed >= 2.4) {
   const coBaseY = 0.43;
   const paBaseY = 0.25;
 
-  // Cu
+  // Cu：ゆっくり・少し大きめ
   const cuFloat =
     Math.sin(elapsed * 1.35) * 0.018;
 
-  // Co
+  // Co：Cuより少し速く、位相をずらす
   const coFloat =
     Math.sin(elapsed * 1.55 + 1.8) * 0.015;
 
-  // Pa
+  // Pa：逆方向気味に、やや小さく
   const paFloat =
     Math.sin(elapsed * 1.25 + 3.4) * 0.012;
 
@@ -903,64 +917,55 @@ if (elapsed >= 2.4) {
   this.pa.object3D.position.y =
     paBaseY + paFloat;
 
-// ごく小さく左右へ揺らす
-this.character.object3D.rotation.z =
-  Math.sin(elapsed * 0.95) * 0.012;
+  // ほんの少しだけ左右に揺らす
+  this.character.object3D.rotation.z =
+    Math.sin(elapsed * 0.95) * 0.012;
 
-this.co.object3D.rotation.z =
-  Math.sin(elapsed * 1.05 + 1.4) * 0.010;
+  this.co.object3D.rotation.z =
+    Math.sin(elapsed * 1.05 + 1.4) * 0.010;
 
-this.pa.object3D.rotation.z =
-  Math.sin(elapsed * 0.85 + 2.7) * 0.008;
+  this.pa.object3D.rotation.z =
+    Math.sin(elapsed * 0.85 + 2.7) * 0.008;
+}
 
 }
 
-this.updateBlink(elapsed);
+      this.updateBlink(elapsed);
 
-if (elapsed >= 2.05) {
-  this.status.textContent =
-    "星輝子、召喚！";
-}
-
-// tick終了
-}
-
-});
-
-// ==================================================
-// MindAR起動イベント
-// ==================================================
-
-window.addEventListener("DOMContentLoaded", () => {
-
-  const scene =
-    document.querySelector("a-scene");
-
-  const status =
-    document.querySelector("#status");
-
-  scene.addEventListener("arReady", () => {
-
-    console.log("MindAR起動成功");
-
-    status.textContent =
-      "認識画像を探しています";
-
+      if (elapsed >= 2.05) {
+        this.status.textContent =
+          "星輝子、召喚！";
+      }
+    }
   });
 
-  scene.addEventListener("arError", (event) => {
+  window.addEventListener("DOMContentLoaded", () => {
+    const scene =
+      document.querySelector("a-scene");
 
-    console.error(
-      "MindAR起動失敗",
-      event
+    const status =
+      document.querySelector("#status");
+
+    scene.addEventListener("arReady", () => {
+      console.log("MindAR起動成功");
+
+      status.textContent =
+        "認識画像を探しています";
+    });
+
+    scene.addEventListener(
+      "arError",
+      (event) => {
+        console.error(
+          "MindAR起動失敗",
+          event
+        );
+
+        status.textContent =
+          "ARの起動に失敗しました";
+      }
     );
-
-    status.textContent =
-      "ARの起動に失敗しました";
-
   });
-
-});
 </script>
 </head>
 
@@ -975,7 +980,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   <a-scene
     mindar-image="
-      imageTargetSrc: ../assets/targets/target.mind;
+      imageTargetSrc: ./assets/targets/target.mind;
       autoStart: true;
       filterMinCF: 0.001;
       filterBeta: 0.01;
@@ -996,30 +1001,30 @@ window.addEventListener("DOMContentLoaded", () => {
     <a-assets timeout="15000">
   <img
     id="cu-open"
-    src="../assets/characters/cu_open.png"
+    src="./assets/characters/cu_open.png"
     crossorigin="anonymous"
   >
 
   <img
     id="cu-half"
-    src="../assets/characters/cu_half.png"
+    src="./assets/characters/cu_half.png"
     crossorigin="anonymous"
   >
 
   <img
     id="cu-close"
-    src="../assets/characters/cu_close.png"
+    src="./assets/characters/cu_close.png"
     crossorigin="anonymous"
   >
   <img
   id="co-open"
-  src="../assets/characters/co_open.png"
+  src="./assets/characters/co_open.png"
   crossorigin="anonymous"
 
   >
   <img
   id="pa-open"
-  src="../assets/characters/pa_open.png"
+  src="./assets/characters/pa_open.png"
   crossorigin="anonymous"
 >
 
@@ -1079,7 +1084,7 @@ window.addEventListener("DOMContentLoaded", () => {
   width="0.88"
   height="1.32"
 
-  position="0.43 0.43 0.045"
+  position="0.43 0.43 0.048"
 
   scale="0.001 0.001 0.001"
 
