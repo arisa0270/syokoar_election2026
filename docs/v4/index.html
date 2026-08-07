@@ -794,10 +794,12 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
         );
 
         // 登場後は少しふわふわ動く
+const cuStartY = 0.34;
+const cuBaseY = 0.47;
 
-        this.character.object3D.position.y =
-          0.25 +
-          eased * 0.13;
+this.character.object3D.position.y =
+  cuStartY +
+  (cuBaseY - cuStartY) * eased;
 
       }
 
@@ -883,29 +885,42 @@ if(elapsed>=1.95){
 
     );
 
-    // ----------------------------------------------
+// ----------------------------------------------
 // 3人のふわふわ動作
 // ----------------------------------------------
 
-// 登場演出が落ち着いてから開始
 if (elapsed >= 2.4) {
 
-  // 基準位置
   const cuBaseY = 0.47;
   const coBaseY = 0.43;
   const paBaseY = 0.25;
 
-  // Cu：ゆっくり・少し大きめ
+  // ふわふわ開始から0.8秒かけて動きを馴染ませる
+  const floatBlend =
+    Math.min(
+      (elapsed - 2.4) / 0.8,
+      1
+    );
+
+  // 0→1を滑らかに変化
+  const smoothBlend =
+    floatBlend * floatBlend *
+    (3 - 2 * floatBlend);
+
   const cuFloat =
-    Math.sin(elapsed * 1.35) * 0.018;
+    Math.sin(elapsed * 1.35) *
+    0.018 *
+    smoothBlend;
 
-  // Co：Cuより少し速く、位相をずらす
   const coFloat =
-    Math.sin(elapsed * 1.55 + 1.8) * 0.015;
+    Math.sin(elapsed * 1.55 + 1.8) *
+    0.015 *
+    smoothBlend;
 
-  // Pa：逆方向気味に、やや小さく
   const paFloat =
-    Math.sin(elapsed * 1.25 + 3.4) * 0.012;
+    Math.sin(elapsed * 1.25 + 3.4) *
+    0.012 *
+    smoothBlend;
 
   this.character.object3D.position.y =
     cuBaseY + cuFloat;
@@ -916,15 +931,21 @@ if (elapsed >= 2.4) {
   this.pa.object3D.position.y =
     paBaseY + paFloat;
 
-  // ほんの少しだけ左右に揺らす
+  // 角度演出はやめたので、ごく小さい揺れだけ
   this.character.object3D.rotation.z =
-    Math.sin(elapsed * 0.95) * 0.012;
+    Math.sin(elapsed * 0.95) *
+    0.006 *
+    smoothBlend;
 
   this.co.object3D.rotation.z =
-    Math.sin(elapsed * 1.05 + 1.4) * 0.010;
+    Math.sin(elapsed * 1.05 + 1.4) *
+    0.006 *
+    smoothBlend;
 
   this.pa.object3D.rotation.z =
-    Math.sin(elapsed * 0.85 + 2.7) * 0.008;
+    Math.sin(elapsed * 0.85 + 2.7) *
+    0.005 *
+    smoothBlend;
 }
 
 }
