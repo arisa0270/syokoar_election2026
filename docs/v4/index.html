@@ -794,18 +794,8 @@ if (elapsed >= 1.22 && elapsed <= 1.62) {
         );
 
         // 登場後は少しふわふわ動く
-        const floating =
-          characterProgress >= 1
-            ? Math.sin(elapsed * 1.8) * 0.018
-            : 0;
-
         this.character.object3D.position.y =
-          0.25 +
-          eased * 0.13 +
-          floating;
-
-        this.character.object3D.rotation.z =
-          Math.sin(elapsed * 1.15) * 0.012;
+        0.34 + eased * 0.13;
       }
 
       //----------------------------------
@@ -889,6 +879,49 @@ if(elapsed>=1.95){
         eased
 
     );
+
+    // ----------------------------------------------
+// 3人のふわふわ動作
+// ----------------------------------------------
+
+// 登場演出が落ち着いてから開始
+if (elapsed >= 2.4) {
+
+  // 基準位置
+  const cuBaseY = 0.47;
+  const coBaseY = 0.43;
+  const paBaseY = 0.25;
+
+  // Cu：ゆっくり・少し大きめ
+  const cuFloat =
+    Math.sin(elapsed * 1.35) * 0.018;
+
+  // Co：Cuより少し速く、位相をずらす
+  const coFloat =
+    Math.sin(elapsed * 1.55 + 1.8) * 0.015;
+
+  // Pa：逆方向気味に、やや小さく
+  const paFloat =
+    Math.sin(elapsed * 1.25 + 3.4) * 0.012;
+
+  this.character.object3D.position.y =
+    cuBaseY + cuFloat;
+
+  this.co.object3D.position.y =
+    coBaseY + coFloat;
+
+  this.pa.object3D.position.y =
+    paBaseY + paFloat;
+
+  // ほんの少しだけ左右に揺らす
+  this.character.object3D.rotation.z =
+    Math.sin(elapsed * 0.95) * 0.012;
+
+  this.co.object3D.rotation.z =
+    Math.sin(elapsed * 1.05 + 1.4) * 0.010;
+
+  this.pa.object3D.rotation.z =
+    Math.sin(elapsed * 0.85 + 2.7) * 0.008;
 
 }
 
